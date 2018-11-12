@@ -1,25 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using EPC.Models;
-using System.Net;
+﻿using System.Diagnostics;
 using System.IO;
-using Newtonsoft.Json;
-using System.Runtime.Serialization.Json;
+using System.Net;
+using EPC.Http;
 using EPC.Model;
-using System.Net.Http;
-using System.Text;
+using EPC.Models;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace EPC.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly string _baseUrl = "http://localhost:6000/";
-        private WebClient client = new WebClient();
-
         public IActionResult Index()
         {
             return View();
@@ -50,7 +41,7 @@ namespace EPC.Controllers
         }
 
         [Route("post")]
-        public async Task<string> PostTemperaturesAsync()
+        public void PostTemperaturesAsync()
         {
             string json = "{\"ListOfSensors\": [";
             int amountOfBoxes = 2;
@@ -64,21 +55,7 @@ namespace EPC.Controllers
             }
             json += "]}";
 
-            //return json;
-
-            string result = "";
-            byte[] response;
-            var content = Encoding.Default.GetBytes(json);
-
-            lock (client)
-            {
-                response = client.UploadData(_baseUrl + "/api/epc/temperature", "POST", content);
-            }
-
-            result = Encoding.Default.GetString(response);
-            Console.WriteLine(result);
-
-            return result;
+            new HttpHandler().HttpPostRequest(json, "api/epc/temperature");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
