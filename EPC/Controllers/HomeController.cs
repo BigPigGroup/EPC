@@ -11,24 +11,29 @@ using Newtonsoft.Json;
 using System.Runtime.Serialization.Json;
 using EPC.Model;
 using System.Net.Http;
+using System.Text;
 
 namespace EPC.Controllers
 {
     public class HomeController : Controller
     {
-        private static readonly HttpClient client = new HttpClient();
+        private readonly string _baseUrl = "http://localhost:6000/";
+        private WebClient client = new WebClient();
 
         public IActionResult Index()
         {
             return View();
         }
 
+        //this route "/get" just returns the temperature of the 192.168.1.150 temperature sensor for debugging
         [Route("get")]
         public string PrintTemperature()
         {
             return GetTemperature(0);
         }
 
+        //This method takes the temperature of the box you ask for and return it as a string
+        //this is used before the post request the the API and this is called for every box
         public string GetTemperature(int boxNo)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://192.168.1." + (150 + boxNo));
@@ -47,14 +52,11 @@ namespace EPC.Controllers
         [Route("post")]
         public async Task<string> PostTemperaturesAsync()
         {
-            var httpWebRequest = (HttpWebRequest)WebRequest.Create("http://192.168.1.126:6000/api/epc/temperature");
-            httpWebRequest.ContentType = "application/json";
-            httpWebRequest.Method = "POST";
             string json = "{\"ListOfSensors\": [";
             int amountOfBoxes = 2;
-            for (int i = 0; i < amountOfBoxes; i++)
+            for (int i = 1; i < amountOfBoxes + 1; i++)
             {
-                json += "{\"BoxNo\": " + i + ", \"Value\": \"" + GetTemperature(i) + "\", \"SensorType\": \"Temperature\"}";
+                json += "{\"BoxNo\": " + i + ", \"Value\": \"" + GetTemperature(i - 1) + "\", \"SensorType\": \"Temperature\"}";
                 if (i < amountOfBoxes - 1)
                 {
                     json += ",";
@@ -64,19 +66,19 @@ namespace EPC.Controllers
 
             //return json;
 
-            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            string result = "";
+            byte[] response;
+            var content = Encoding.Default.GetBytes(json);
+
+            lock (client)
             {
-                streamWriter.Write(json);
-                streamWriter.Flush();
-                streamWriter.Close();
+                response = client.UploadData(_baseUrl + "/api/epc/temperature", "POST", content);
             }
 
-            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-            {
-                var result = streamReader.ReadToEnd();
-                return result;
-            }
+            result = Encoding.Default.GetString(response);
+            Console.WriteLine(result);
+
+            return result;
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
