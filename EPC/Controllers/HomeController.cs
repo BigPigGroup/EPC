@@ -47,7 +47,7 @@ namespace EPC.Controllers
         [Route("post")]
         public async Task<string> PostTemperaturesAsync()
         {
-            var httpWebRequest = (HttpWebRequest)WebRequest.Create("http://192.168.1.3:6000");
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create("http://192.168.1.126:6000/api/epc/temperature");
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Method = "POST";
             string json = "{\"ListOfSensors\": [";
