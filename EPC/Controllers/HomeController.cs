@@ -57,7 +57,7 @@ namespace EPC.Controllers
             for (int i = 1; i < amountOfBoxes + 1; i++)
             {
                 json += "{\"BoxNo\": " + i + ", \"Value\": \"" + GetTemperature(i - 1) + "\", \"SensorType\": \"Temperature\"}";
-                if (i < amountOfBoxes - 1)
+                if (i < amountOfBoxes)
                 {
                     json += ",";
                 }
